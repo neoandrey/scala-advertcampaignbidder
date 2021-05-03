@@ -29,8 +29,13 @@ if([System.IO.File]::Exists($path)){
 		  $shouldCommit = Read-Host -Prompt "Do you want to push the updates? (type  'y' or  'n')"
 		  
 		   if  ($shouldCommit -eq 'y'){
-			   write-host "pusing with account: neoandrey@yahoo.com/342c1bb717ff8bf9bb4d450ae870352f8e47a75d"
-            git push -u origin main	| Out-String	 	      
+			 
+            $repoIndex = Read-Host -Prompt "Please choose a target remote repository:1. Git`n2. Heroku"
+            if ($repoIndex -eq '1'){
+               git push -u origin main	| Out-String	
+            } elseif ($repoIndex -eq '2'){
+              git push heroku main	| Out-String	
+            }	      
 		   }
  }
 

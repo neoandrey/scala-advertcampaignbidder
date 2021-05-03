@@ -7,11 +7,11 @@ import akka.actor.typed.scaladsl.Behaviors
 import scala.collection.immutable
 import scala.util.Random
 
-case class Targeting(targetedSiteIds: Set[String]) 
+case class Targeting(targetedSiteIds: Vector[String]) 
 case class Banner(id: Int, src: String, width: Int, height: Int) 
-case class Campaign(id: Int, country: String, targeting: Targeting, banners: List[Banner], bid: Double)
+case class Campaign(id: Int, country: String, targeting: Targeting, banners: Vector[Banner], bid: Double)
 
-case class BidRequest(id: String, imp: Option[List[Impression]], site: Site, user: Option[User], device: Option[Device])
+case class BidRequest(id: String, imp: Option[Vector[Impression]], site: Site, user: Option[User], device: Option[Device])
 case class Impression(id: String, wmin: Option[Int], wmax: Option[Int], w: Option[Int], hmin: Option[Int], hmax: Option[Int], h: Option[Int], bidFloor: Option[Double])
 case class Site(id: String, domain: String)
 case class User(id: String, geo: Option[Geo])
@@ -20,8 +20,8 @@ case class Geo(country: Option[String])
 
 case class BidResponse(id: String, bidRequestId: String, price: Double, adid: Option[String], banner: Option[Banner])
 
-final case class Bids(bids: immutable.Set[BidRequest])
-final case class Campaigns(campaigns: immutable.Set[Campaign])
+final case class Bids(bids: immutable.Vector[BidRequest])
+final case class Campaigns(campaigns: immutable.Vector[Campaign])
 
 object BidRegistry{
 
@@ -40,9 +40,9 @@ object BidRegistry{
     type BidMap  =scala.collection.mutable.Map[BidRequest, BidResponse]
     var bidResponseMap:  BidMap = scala.collection.mutable.Map()
 
-    def apply(): Behavior[Command] = registry(Set.empty,Set.empty)
+    def apply(): Behavior[Command] = registry(Vector.empty[Campaign],Vector.empty[BidRequest])
 
-    def matchBidToCampaign(bid: BidRequest, campaigns: immutable.Set[Campaign]): Option[BidResponse]  = {
+    def matchBidToCampaign(bid: BidRequest, campaigns: immutable.Vector[Campaign]): Option[BidResponse]  = {
         val matchThreshold                      = 10
         val dev                                 = bid.device.get.geo.get
         val usr                                 = bid.user.get.geo.get
@@ -151,14 +151,18 @@ object BidRegistry{
        bidResponse                 
     }
 
-    private def registry(campaigns: Set[Campaign], bids: Set[BidRequest]): Behavior[Command] =
+    private def registry(campaigns: Vector[Campaign], bids: Vector[BidRequest]): Behavior[Command] =
         Behaviors.receiveMessage {
         case GetCampaigns(replyTo) =>
             replyTo ! Campaigns(campaigns)
             Behaviors.same
         case AddCampaign(campaign, replyTo) =>
             replyTo ! OperationDone(s"Campaign ${campaign.id} has been added.")
-            registry(campaigns + campaign, Set.empty)
+            registry( ( campaign match{
+                case x if campaigns.filter(_.id==campaign.id).isEmpty => campaigns++Vector(campaign)
+                case  _ =>campaigns
+       }
+            ), Vector.empty[BidRequest])
         case GetCampaign(id, replyTo) =>
             replyTo ! GetCampaignInfo(campaigns.find(_.id.toString == id.toString))
             Behaviors.same
@@ -167,7 +171,13 @@ object BidRegistry{
             Behaviors.same
         case PlaceBid(bid, replyTo) =>
             replyTo !  matchBidToCampaign(bid, campaigns) 
-            registry(Set.empty,bids + bid)
+            registry(Vector.empty [Campaign], ( bid match{
+                case x if bids.filter(_.id==bid.id).isEmpty => bids++Vector(bid)
+                case  _ =>bids
+       }
+            )
+     
+     )
         case GetBid(id, replyTo) =>
             replyTo ! GetBidInfo(bids.find(_.id == id))
             Behaviors.same
