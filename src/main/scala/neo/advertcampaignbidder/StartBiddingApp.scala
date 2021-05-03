@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Route
 import scala.util.Failure
 import scala.util.Success
 import com.typesafe.config._
+import scala.util.Properties
 
 object StartBiddingApp {
  
@@ -16,7 +17,8 @@ object StartBiddingApp {
     
     import system.executionContext
     val host: String = config.getString("settings.http.host")
-    val port: Int    = config.getInt("settings.http.port")
+    val configPort: Int    = config.getInt("settings.http.port")
+    val port:Int    = Properties.envOrElse("PORT",configPort).toInt
     val futureBinding = Http().newServerAt(host, port).bind(routes)
     futureBinding.onComplete {
       case Success(binding) =>
