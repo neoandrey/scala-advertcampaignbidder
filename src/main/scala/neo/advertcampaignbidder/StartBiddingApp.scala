@@ -17,9 +17,9 @@ object StartBiddingApp {
     
     import system.executionContext
     val host: String          = config.getString("settings.http.host")
-    val configPort: String    = config.getInt("settings.http.port")
+    val configPort: String    = config.getString("settings.http.port")
     val port:Int              = Properties.envOrElse("PORT",configPort).toInt
-    val futureBinding         = Http().newServerAt(host, port.toString).bind(routes)
+    val futureBinding         = Http().newServerAt(host, port).bind(routes)
     futureBinding.onComplete {
       case Success(binding) =>
         val address = binding.localAddress
