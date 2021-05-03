@@ -1,2 +1,1 @@
-heroku login
-heroku create advercampaignbidder
+heroku login && heroku create advercampaignbidder

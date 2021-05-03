@@ -30,7 +30,7 @@ if([System.IO.File]::Exists($path)){
 		  
 		   if  ($shouldCommit -eq 'y'){
 			 
-            $repoIndex = Read-Host -Prompt "Please choose a target remote repository:1. Git`n2. Heroku"
+            $repoIndex = Read-Host -Prompt "Please choose a target remote repository:`n1. Git`n2. Heroku"
             if ($repoIndex -eq '1'){
                git push -u origin main	| Out-String	
             } elseif ($repoIndex -eq '2'){
