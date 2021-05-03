@@ -16,10 +16,10 @@ object StartBiddingApp {
     def startHttpServer(routes: Route)(implicit system: ActorSystem[_]): Unit = {
     
     import system.executionContext
-    val host: String = config.getString("settings.http.host")
-    val configPort: Int    = config.getInt("settings.http.port")
-    val port:Int    = Properties.envOrElse("PORT",configPort).toInt
-    val futureBinding = Http().newServerAt(host, port.toString).bind(routes)
+    val host: String          = config.getString("settings.http.host")
+    val configPort: String    = config.getInt("settings.http.port")
+    val port:Int              = Properties.envOrElse("PORT",configPort).toInt
+    val futureBinding         = Http().newServerAt(host, port.toString).bind(routes)
     futureBinding.onComplete {
       case Success(binding) =>
         val address = binding.localAddress
