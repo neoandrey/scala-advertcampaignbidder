@@ -159,9 +159,9 @@ object BidRegistry{
         case AddCampaign(campaign, replyTo) =>
             replyTo ! OperationDone(s"Campaign ${campaign.id} has been added.")
             registry( ( campaign match{
-                case x if campaigns.filter(_.id==campaign.id).isEmpty => campaigns++Vector(campaign)
+                case x if campaigns.filter(_.id==campaign.id).isEmpty => campaigns:+ campaign
                 case  _ =>campaigns
-       }
+           }
             ), Vector.empty[BidRequest])
         case GetCampaign(id, replyTo) =>
             replyTo ! GetCampaignInfo(campaigns.find(_.id.toString == id.toString))
@@ -172,7 +172,7 @@ object BidRegistry{
         case PlaceBid(bid, replyTo) =>
             replyTo !  matchBidToCampaign(bid, campaigns) 
             registry(Vector.empty [Campaign], ( bid match{
-                case x if bids.filter(_.id==bid.id).isEmpty => bids++Vector(bid)
+                case x if bids.filter(_.id==bid.id).isEmpty => bids :+bid
                 case  _ =>bids
        }
             )
