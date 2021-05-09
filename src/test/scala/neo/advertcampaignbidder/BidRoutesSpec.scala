@@ -9,6 +9,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import akka.http.scaladsl.model.StatusCode
 
 //#set-up
 class BidRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with ScalatestRouteTest {
@@ -17,8 +18,9 @@ class BidRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sca
   // the Akka HTTP route testkit does not yet support a typed actor system (https://github.com/akka/akka-http/issues/2036)
   // so we have to adapt for now
   lazy val testKit = ActorTestKit()
-  implicit def typedSystem = testKit.system
-  override def createActorSystem(): akka.actor.ActorSystem =  testKit.system.classicSystem
+  implicit def typedSystem = testKit.system 
+  override def createActorSystem(): akka.actor.ActorSystem   =  testKit.system.classicSystem
+  private final val  noMatchCode:StatusCode                  =  StatusCodes.custom(204,  "No campaign match found","Not Found",true, false)
 
   // Here we need to implement all the abstract members of BidRoutes.
   // We use the real BidRegistryActor to test it while we hit the Routes,
@@ -88,7 +90,7 @@ class BidRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sca
     val impress: Impression      = Impression(id="1", wmin=Some(50),wmax=Some(300),hmin=Some(100),hmax=Some(300),h=Some(250),w=Some(300),bidFloor=Some(3.12123))
 	  val bidReq :BidRequest       = BidRequest("SGu1Jpq1IO", Some(Vector(impress)), site, user, device=dvc)
     val bidReqEntity             = Marshal(bidReq).to[MessageEntity].futureValue
-    
+
     val request = Post("/bids").withEntity(bidReqEntity)
     request ~> routes ~> check {
         status should      ===(StatusCodes.Created)
@@ -96,7 +98,24 @@ class BidRoutesSpec extends AnyWordSpec with Matchers with ScalaFutures with Sca
         entityAs[String] should ===("""{"adid":"1","banner":{"height":250,"id":1,"src":"https://business.eskimi.com/wp-content/uploads/2020/06/openGraph.jpeg","width":300},"bidRequestId":"SGu1Jpq1IO","id":"1","price":3.12123}""")
       }
     }
-	
+	  "should not match bids to campaigns (POST /bids)" in {
+	 
+	  val site   :Site             = Site(id= "0006a522ce0f4bbbbaa6b3c38cafaa0f",domain="fake.tld")
+    val geo    :Geo              = Geo(country=Some("LTE"));
+	  val geoLT  :Option[Geo]      = Some(geo)
+	  val user   :Option[User]     = Some(User(id="USARIO1",geo=geoLT))
+	  val dvc    :Option[Device]   = Some(Device(id="440579f4b408831516ebd02f6e1c31b4", geo=geoLT))
+    val impress: Impression      = Impression(id="1", wmin=Some(50),wmax=Some(300),hmin=Some(100),hmax=Some(300),h=Some(250),w=Some(300),bidFloor=Some(3.12123))
+	  val bidReq :BidRequest       = BidRequest("SGu1Jpq1IO", Some(Vector(impress)), site, user, device=dvc)
+    val bidReqEntity             = Marshal(bidReq).to[MessageEntity].futureValue
+    
+    val request = Post("/bids").withEntity(bidReqEntity)
+    request ~> routes ~> check {
+        status should      ===(noMatchCode)
+        contentType should ===(ContentTypes.`NoContentType`)
+        entityAs[String] should ===("""""")
+      }
+    }
 
   }
   //#actual-test
