@@ -21,9 +21,17 @@ There are several ways to run this application. You could:
         sudo docker run  -p 2212:2212 -d neoandrey/advert_campaign_bidding_app
 
 ### Heroku
-The application has also been deployed to heroku and can be access here [advert_campaign_bidding_app](https://advercampaignbidder.herokuapp.com/)
+The application has also been deployed to heroku and can be access here [advert_campaign_bidding_app](https://advercampaignbidder.herokuapp.com/campaigns)
 
 ### Testing
 1. clone this repository with this command: git clone https://github.com/neoandrey/scala-advertcampaignbidder.git. 
 2. Navigate to the root directory of the clone repository.
 3. Type *sbt test* or run the *test.cmd* script if you are working with a Windows machine.
+
+## URL Paths
+1. /campaigns:
+   1. GET  - Lists registered campaigns 
+   2. POST - Creates a campaign provided valid JSON is sent in the payload of the request
+2. /bids:
+   1. GET  - Lists historical bids
+   2. POST - Creates a bid and searches for a matching campaign. It returns a matching campaign in its response if found otherwise it returns with a status code that indicates that no match was found. 
