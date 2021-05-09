@@ -20,7 +20,7 @@ if([System.IO.File]::Exists($path)){
  }
  if  ($shouldCommit -eq 'y'){
     
-        $commitMessage =    Read-Host -Prompt  'Please type version suffix'
+        $commitMessage =    Read-Host -Prompt  'Please type version suffix (default: 1.0)'
         $commitMessage = "$commitMessage.$commitCount"
         git add .
         git commit -m $commitMessage
